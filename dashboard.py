@@ -116,55 +116,27 @@ def addFiltroAnos(df):
     if todosAnos:
         selecao = (anoMin, anoMax)
     else:
-        selecao = st.sidebar.slider('Ano', anoMin, anoMax, value = (anoMin, anoMax))
+        selecao = st.sidebar.slider('**Ano**', anoMin, anoMax, value = (anoMin, anoMax))
     debugger(f'Intervalo anos: {selecao}')
     return selecao
 
+def addFiltroFluxo():
+    st.sidebar.divider()
+    selecao = st.sidebar.radio('**Sumarizar por**',['Origem','Asilo'])
+    debugger(f'Sumarizar por: {selecao}')
+    return selecao
+
+
 def addFiltroTipoPopulacao(df):
+    st.sidebar.divider()
     lista = listaTipoPopulacao(df)
-    selecao = st.sidebar.multiselect('Tipo de população',
+    selecao = st.sidebar.multiselect('**Tipo de população**',
                                     lista, 
                                     default=lista,                                  
                                     format_func=formataTP,
                                     placeholder='Selecione as opções...')
     debugger(f'MTPSelected: {selecao}')    
     return selecao
-
-# def addFiltroRegiaoUNHCR(df):
-#     lista = listaRegiaoUNHCR(df)
-#     selecao = st.sidebar.multiselect('Região UNHCR',
-#                                     lista, 
-#                                     default=lista,                                  
-#                                     placeholder='Selecione as opções...')
-#     debugger(f'UNHCR Selected: {selecao}')    
-#     return selecao
-
-# def addFiltroRegiaoUNSD(df):
-#     lista = listaRegiaoUNSD(df)
-#     selecao = st.sidebar.multiselect('Região UNSD',
-#                                     lista, 
-#                                     default=lista,                                  
-#                                     placeholder='Selecione as opções...')
-#     debugger(f'UNSD Selected: {selecao}')    
-#     return selecao
-
-# def addFiltroSubRegiaoUNSD(df):
-#     lista = listaSubRegiaoUNSD(df)
-#     selecao = st.sidebar.multiselect('Região UNSD',
-#                                     lista, 
-#                                     default=lista,                                  
-#                                     placeholder='Selecione as opções...')
-#     debugger(f'Sub UNSD Selected: {selecao}')    
-#     return selecao
-
-# def addFiltroRegiaoSGD(df):
-#     lista = listaRegiaoSGD(df)
-#     selecao = st.sidebar.multiselect('Região SGD',
-#                                     lista, 
-#                                     default=lista,                                  
-#                                     placeholder='Selecione as opções...')
-#     debugger(f'SGD Selected: {selecao}')    
-#     return selecao
 
 
 ############
@@ -204,8 +176,8 @@ def refugiadosPorAno(df):
         color=alt.Color('Ano:O', scale=alt.Scale(scheme='category20'), legend=None),
         tooltip=['Ano', 'Quantidade']
     ).properties(
-        width=710,
-        height=400,
+        width=1020,
+        height=600,
         title='Quantidade de refugiados por ano'
     )
     st.altair_chart(chart, use_container_width=False)
@@ -218,8 +190,8 @@ def refugiadosPorRegiao(df, regiao, tit_x='Região', tit_chart='Refugiados por r
         color=alt.Color(f'{regiao}:N', legend=alt.Legend(title="Regiões")),
         tooltip=[regiao, 'Quantidade']
     ).properties(
-        width=710,
-        height=400,
+        width=1020,
+        height=600,
         title=tit_chart
     )
     st.altair_chart(chart, use_container_width=False)
@@ -233,8 +205,8 @@ def refugiadosPorAnoRegiao(df, regiao, tit_chart='Refugiados por ano e região')
         color=alt.Color(f'{regiao}:N', title='Regiões'),
         tooltip=['Ano', regiao, 'Quantidade']
     ).properties(
-        width=710,
-        height=400,
+        width=1280,
+        height=700,
         title=tit_chart
     )
     st.altair_chart(chart, use_container_width=False)
@@ -273,8 +245,8 @@ def refugiadosMapaMundi(df, countries, sentido, tit_chart):
         color=alt.Color(f'{pais}:N', legend=None),
         tooltip=[f'{pais}:N', 'Quantidade:Q']
     ).properties(
-        width=1368,
-        height=768,
+        width=1280,
+        height=700,
         title=tit_chart
     )    
 
@@ -283,10 +255,12 @@ def refugiadosMapaMundi(df, countries, sentido, tit_chart):
         fill='lightgray',
         stroke='white'
     ).properties(
-        width=1368,
-        height=768
-    )    
+        width=1280,
+        height=700
+    )
+
     st.altair_chart((background + chart).project(scale=200), use_container_width=True)
+
 
 
 # sentido: Origem | Destino
@@ -319,14 +293,6 @@ def agruparOutrosPaises(df, origem, asilo, topn = None):
 
 
 def refugiadosPorPais(df):
-    # Exemplo de dados
-    # data = {
-    #     'NomePaisOrigem': ['Brasil', 'Brasil', 'Argentina', 'Argentina', 'Brasil'],
-    #     'NomePaisAsilo': ['EUA', 'Argentina', 'Brasil', 'EUA', 'Alemanha'],
-    #     'Quantidade': [100, 200, 300, 400, 150]
-    # }
-    # # Criando DataFrame
-    # df = pd.DataFrame(data)
 
     # Criando listas de labels únicas para os nós
     all_countries = pd.concat([df['NomePaisOrigem'], df['NomePaisAsilo']]).unique()
@@ -339,23 +305,95 @@ def refugiadosPorPais(df):
     target = [country_idx[dst] for dst in df['NomePaisAsilo']]
     values = df['Quantidade'].tolist()
 
-    # Criando o gráfico
     fig = go.Figure(data=[go.Sankey(
+        arrangement='snap',
         node=dict(
-            pad=20,
+            pad=30,
             thickness=20,
-            line=dict(color="black", width=0.5),
+            line=dict(color="black", width=1.0),
             label=list(all_countries)
         ),
         link=dict(
+            arrowlen=30,
             source=source,  # Índices dos países de origem
             target=target,  # Índices dos países destino
-            value=values  # Quantidade de movimentação
+            value=values,  # Quantidade de movimentação
+            color='#EEEEEE' #F2EFE5'#F5EFE6' #F2EFE5'#'#EFEFEF'#'#F1F1F1'#'#EADBC8'
         ))])
 
     # Configurando o layout
     fig.update_layout(title_text="Fluxo de Movimentação entre Países", 
-                      font_size=10,
+                      font=dict(size = 20),
+                      height=768)
+
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def agruparOutrosPaisesTipoPopulacao(df, origem, asilo, topn = None):
+
+    # Ordenar o DataFrame por 'Quantidade' em ordem decrescente
+    aggregated_df = df.groupby(['NomePaisOrigem', 'TipoPopulacao', 'NomePaisAsilo']).agg({'Quantidade': 'sum'}).reset_index().sort_values(by='Quantidade', ascending=False)
+
+    if topn == None:
+        return aggregated_df
+    else:
+        # Separar os topn registros
+        top_df = aggregated_df.head(topn)
+
+        # Agregar os demais registros
+        others_df = aggregated_df.iloc[topn:]
+
+        # Se há registros em others_df, agregue-os
+        if not others_df.empty:
+            nomePaisGrupo = 'NomePais' + origem
+            nomePaisOutros = 'NomePais' + asilo
+            others_aggregated = others_df.groupby([nomePaisGrupo,'TipoPopulacao']).agg({'Quantidade': 'sum'}).reset_index()
+            others_aggregated[nomePaisOutros] = 'Outros'
+            # Concatenar os topn registros com os agregados 'Outros'
+            final_df = pd.concat([top_df, others_aggregated]).sort_values(by='Quantidade', ascending=False)
+        else:
+            final_df = top_df
+
+        return final_df
+
+
+def refugiadosPorPaisTipoPopulacao(df):
+    unique_nodes = pd.concat([df['NomePaisOrigem'], df['TipoPopulacao'], df['NomePaisAsilo']]).unique()
+    node_dict = {node: i for i, node in enumerate(unique_nodes)}
+
+    source = []
+    target = []
+    values = []
+
+    for _, row in df.iterrows():
+        source.append(node_dict[row['NomePaisOrigem']])
+        target.append(node_dict[row['TipoPopulacao']])
+        values.append(row['Quantidade'])
+
+        source.append(node_dict[row['TipoPopulacao']])
+        target.append(node_dict[row['NomePaisAsilo']])
+        values.append(row['Quantidade'])   
+
+    fig = go.Figure(data=[go.Sankey(
+        arrangement='snap',
+        node=dict(
+            pad=30,
+            thickness=20,
+            line=dict(color="black", width=1.0),
+            label=list(unique_nodes)
+        ),
+        link=dict(
+            arrowlen=30,
+            source=source,  # Índices dos países de origem
+            target=target,  # Índices dos países destino
+            value=values,  # Quantidade de movimentação
+            color='#EEEEEE'
+        ))])
+
+    # Configurando o layout
+    fig.update_layout(title_text='Fluxo de Movimentação entre Países de origem e asilo', 
+                      font=dict(size = 20),
                       height=768)
 
     
@@ -389,30 +427,26 @@ countries = lerMapaMundi()
 st.sidebar.title('Filtros')
 
 filtroAnos = addFiltroAnos(df)
+filtroFluxo = addFiltroFluxo()
 filtroTP = addFiltroTipoPopulacao(df)
 
 df_filtrado = filtroAnoTipoPopulacao(df, filtroAnos, filtroTP)
 
-abaGeral, abaUNHCR, abaUNSD, abaSubUNSD, abaMapa, abaOrigemAsilo = st.tabs(['Geral','Regiões das Nações Unidas','Continentes','Sub Regiões','Mapa Mundi', 'Origem/Asilo'])
+abaGeral, abaUNHCR, abaUNSD, abaSubUNSD, abaMapa, abaOrigemAsilo = st.tabs(['Geral','Regiões das Nações Unidas','Continentes','Sub Regiões','Mapa Mundi', 'Fluxo Origem/Asilo'])
 
 with abaGeral:
-    c1, c2, c3 = st.columns(3)
+    c1, c2 = st.columns(2)
     with c1:
         st.metric("Total de refugiados", formataNumero(df_filtrado['Quantidade'].sum()))    
-    with c2:        
-        st.metric("Países de origem", formataNumero(df_filtrado['SiglaPaisOrigem'].nunique(), decimais=0))
-    with c3:        
-        st.metric("Países de asilo", formataNumero(df_filtrado['SiglaPaisAsilo'].nunique(), decimais=0))
-
-    coluna1, coluna2 = st.columns(2)
-    with coluna1:
         refugiadosPorTipo(df_filtrado)
-        topNRefugiados(df_filtrado, 10, 'Origem', 'Top 10 países de origem de refugiados')
+    with c2:        
+        tituloGeral = 'Países de ' + filtroFluxo
+        campoGeral = 'SiglaPais' + filtroFluxo
+        st.metric(tituloGeral, formataNumero(df_filtrado[campoGeral].nunique(), decimais=0))
+        topNRefugiados(df_filtrado, 10, filtroFluxo, 'Top 10 países de ' + filtroFluxo.lower() + ' de refugiados')
 
-    with coluna2:
-        refugiadosPorAno(df_filtrado)
-        topNRefugiados(df_filtrado, 10, 'Asilo', 'Top 10 países de asilo de refugiados')
-
+    
+    refugiadosPorAno(df_filtrado)
     st.dataframe(df_filtrado)
     
 
@@ -422,14 +456,15 @@ with abaUNHCR:
                             listaRegiaoUNHCR(df_filtrado), 
                             default=listaRegiaoUNHCR(df_filtrado),                                  
                             placeholder='Selecione as opções...')
+
+    if filtroFluxo == 'Origem':
         df_filtrado_origem = df_filtrado[df_filtrado['RegiaoUNHCROrigem'].isin(filtroUNHCR)]
+        refugiadosPorRegiao(df_filtrado_origem, 'RegiaoUNHCROrigem', 'Região de origem', 'Refugiados por região de origem')
+        refugiadosPorAnoRegiao(df_filtrado_origem, 'RegiaoUNHCROrigem', 'Refugiados por ano e região de origem')
+    else:
         df_filtrado_asilo  = df_filtrado[df_filtrado['RegiaoUNHCRAsilo'].isin(filtroUNHCR)]
-
-    refugiadosPorRegiao(df_filtrado_origem, 'RegiaoUNHCROrigem', 'Região de origem', 'Refugiados por região de origem')
-    refugiadosPorAnoRegiao(df_filtrado_origem, 'RegiaoUNHCROrigem', 'Refugiados por ano e região de origem')
-
-    refugiadosPorRegiao(df_filtrado_asilo, 'RegiaoUNHCRAsilo', 'Região de asilo', 'Refugiados por região de asilo')
-    refugiadosPorAnoRegiao(df_filtrado_asilo, 'RegiaoUNHCRAsilo', 'Refugiados por ano e região de asilo')
+        refugiadosPorRegiao(df_filtrado_asilo, 'RegiaoUNHCRAsilo', 'Região de asilo', 'Refugiados por região de asilo')
+        refugiadosPorAnoRegiao(df_filtrado_asilo, 'RegiaoUNHCRAsilo', 'Refugiados por ano e região de asilo')
 
 with abaUNSD:
     with st.expander('**Filtro de Continentes**'):
@@ -437,14 +472,15 @@ with abaUNSD:
                             listaRegiaoUNSD(df_filtrado), 
                             default=listaRegiaoUNSD(df_filtrado),                                  
                             placeholder='Selecione as opções...')
+
+    if filtroFluxo == 'Origem':
         df_filtrado_origem = df_filtrado[df_filtrado['RegiaoUNSDOrigem'].isin(filtroUNSD)]
+        refugiadosPorRegiao(df_filtrado_origem, 'RegiaoUNSDOrigem', 'Continente de origem', 'Refugiados por continente de origem')
+        refugiadosPorAnoRegiao(df_filtrado_origem, 'RegiaoUNSDOrigem', 'Refugiados por ano e continente de origem')
+    else:
         df_filtrado_asilo = df_filtrado[df_filtrado['RegiaoUNSDAsilo'].isin(filtroUNSD)]
-
-    refugiadosPorRegiao(df_filtrado_origem, 'RegiaoUNSDOrigem', 'Continente de origem', 'Refugiados por continente de origem')
-    refugiadosPorAnoRegiao(df_filtrado_origem, 'RegiaoUNSDOrigem', 'Refugiados por ano e continente de origem')
-
-    refugiadosPorRegiao(df_filtrado_asilo, 'RegiaoUNSDAsilo', 'Continente de asilo', 'Refugiados por continente de asilo')
-    refugiadosPorAnoRegiao(df_filtrado_asilo, 'RegiaoUNSDAsilo', 'Refugiados por ano e continente de asilo')
+        refugiadosPorRegiao(df_filtrado_asilo, 'RegiaoUNSDAsilo', 'Continente de asilo', 'Refugiados por continente de asilo')
+        refugiadosPorAnoRegiao(df_filtrado_asilo, 'RegiaoUNSDAsilo', 'Refugiados por ano e continente de asilo')
 
 with abaSubUNSD:
     with st.expander('**Filtro de Sub-regiões**'):
@@ -452,58 +488,57 @@ with abaSubUNSD:
                             listaSubRegiaoUNSD(df_filtrado), 
                             default=listaSubRegiaoUNSD(df_filtrado),                                  
                             placeholder='Selecione as opções...')
+        
+    if filtroFluxo == 'Origem':        
         df_filtrado_origem = df_filtrado[df_filtrado['SubRegiaoUNSDOrigem'].isin(filtroSubRegioes)]
+        refugiadosPorRegiao(df_filtrado_origem, 'SubRegiaoUNSDOrigem', 'Sub-região de origem', 'Refugiados por sub-região de origem')
+        refugiadosPorAnoRegiao(df_filtrado_origem, 'SubRegiaoUNSDOrigem', 'Refugiados por ano e sub-região de origem')
+    else:
         df_filtrado_asilo = df_filtrado[df_filtrado['SubRegiaoUNSDAsilo'].isin(filtroSubRegioes)]
-    
-    refugiadosPorRegiao(df_filtrado_origem, 'SubRegiaoUNSDOrigem', 'Sub-região de origem', 'Refugiados por sub-região de origem')
-    refugiadosPorAnoRegiao(df_filtrado_origem, 'SubRegiaoUNSDOrigem', 'Refugiados por ano e sub-região de origem')
-
-    refugiadosPorRegiao(df_filtrado_asilo, 'SubRegiaoUNSDAsilo', 'Sub-região de asilo', 'Refugiados por sub-região de asilo')
-    refugiadosPorAnoRegiao(df_filtrado_asilo, 'SubRegiaoUNSDAsilo', 'Refugiados por ano e sub-região de asilo')
+        refugiadosPorRegiao(df_filtrado_asilo, 'SubRegiaoUNSDAsilo', 'Sub-região de asilo', 'Refugiados por sub-região de asilo')
+        refugiadosPorAnoRegiao(df_filtrado_asilo, 'SubRegiaoUNSDAsilo', 'Refugiados por ano e sub-região de asilo')
 
 with abaMapa:
-    refugiadosMapaMundi(df_filtrado, countries, 'Origem', 'Países de origem de refugiados')
-    refugiadosMapaMundi(df_filtrado, countries, 'Asilo', 'Países que concederam asilo para refugiados')
+    if filtroFluxo == 'Origem':
+        #refugiadosMapaMundi(df_filtrado, countries, 'Origem', 'Países de origem de refugiados')
+        refugiadosMapaMundi(df_filtrado, countries, 'Origem', 'Países de origem de refugiados')
+    else:
+        refugiadosMapaMundi(df_filtrado, countries, 'Asilo', 'Países que concederam asilo para refugiados')
 
 with abaOrigemAsilo:
 
-    with st.expander('**Filtro de país de origem**'):
-        filtroPaisOrigem = st.selectbox('País',
-                            listaPaisesOrigem(df_filtrado),
-                            index=None,
-                            placeholder='Selecione uma opção...')
-        
-        df_filtrado_origem = df_filtrado.loc[df_filtrado['NomePaisOrigem'] == filtroPaisOrigem, ['NomePaisOrigem', 'NomePaisAsilo', 'Quantidade']]        
+    if filtroFluxo == 'Origem':
+        with st.expander('**Filtro de país de origem**'):
+            filtroPaisOrigem = st.selectbox('País',
+                                listaPaisesOrigem(df_filtrado),
+                                index=None,
+                                placeholder='Selecione uma opção...')
+            
+            df_filtrado_origem = df_filtrado.loc[df_filtrado['NomePaisOrigem'] == filtroPaisOrigem, ['NomePaisOrigem', 'TipoPopulacao', 'NomePaisAsilo', 'Quantidade']]        
 
-        todosAsilos = st.toggle("Mostrar todos os países de asilo", value = True)
-        if todosAsilos:
-            topAsilo = None
-        else:
-            topAsilo = st.number_input("Mostrar no máximo", min_value=1, max_value=200, value = 5, step=1, key="idAsilo")
+            todosAsilos = False
+            if todosAsilos:
+                topAsilo = None
+            else:
+                topAsilo = st.number_input("Mostrar no máximo", min_value=1, max_value=10, value=10, step=1, key="idAsilo")
 
-        df_filtrado_origem_top_asilo = agruparOutrosPaises(df_filtrado_origem, 'Origem', 'Asilo', topAsilo)        
-
-
-    refugiadosPorPais(df_filtrado_origem_top_asilo)
-
-    st.divider()
-
-    with st.expander('**Filtro de país de asilo**'):
-        filtroPaisAsilo = st.selectbox('País',
-                            listaPaisesAsilo(df_filtrado),
-                            index=None,
-                            placeholder='Selecione uma opção...')
-        
-        df_filtrado_asilo = df_filtrado.loc[df_filtrado['NomePaisAsilo'] == filtroPaisAsilo, ['NomePaisOrigem', 'NomePaisAsilo', 'Quantidade']]
-        
-        todosOrigens = st.toggle("Mostrar todos os países de origem", value = True)
-        if todosOrigens:
-            topOrigem = None
-        else:
-            topOrigem = st.number_input("Mostrar no máximo", min_value=1, max_value=200, value = 5, step=1, key="idOrigem")
-        
-        df_filtrado_asilo_top_origem = agruparOutrosPaises(df_filtrado_asilo, 'Asilo', 'Origem', topOrigem)        
-
-
-    refugiadosPorPais(df_filtrado_asilo_top_origem)
+            df_filtrado_origem_top_asilo = agruparOutrosPaisesTipoPopulacao(df_filtrado_origem, 'Origem', 'Asilo', topAsilo)        
+            refugiadosPorPaisTipoPopulacao(df_filtrado_origem_top_asilo)
+    else:
+        with st.expander('**Filtro de país de asilo**'):
+            filtroPaisAsilo = st.selectbox('País',
+                                listaPaisesAsilo(df_filtrado),
+                                index=None,
+                                placeholder='Selecione uma opção...')
+            
+            df_filtrado_asilo = df_filtrado.loc[df_filtrado['NomePaisAsilo'] == filtroPaisAsilo, ['NomePaisOrigem', 'TipoPopulacao', 'NomePaisAsilo', 'Quantidade']]
+            
+            todosOrigens = False
+            if todosOrigens:
+                topOrigem = None
+            else:
+                topOrigem = st.number_input("Mostrar no máximo", min_value=1, max_value=10, value=10, step=1, key="idOrigem")
+            
+            df_filtrado_asilo_top_origem = agruparOutrosPaisesTipoPopulacao(df_filtrado_asilo, 'Asilo', 'Origem', topOrigem)        
+            refugiadosPorPaisTipoPopulacao(df_filtrado_asilo_top_origem)
 
