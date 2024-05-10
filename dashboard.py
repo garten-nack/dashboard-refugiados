@@ -27,7 +27,7 @@ def downloadDadosZip(file_url):
         file.write(response.content)
 
     # Descompactar o arquivo ZIP
-    with zipfile.ZipFile(arquivo, 'rb') as zip_ref:
+    with zipfile.ZipFile(arquivo, 'r') as zip_ref:
         zip_ref.extractall("./dados/")
 
     # Remover o arquivo ZIP após a extração
